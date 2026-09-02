@@ -8,7 +8,7 @@ Built with a premium visual design and powered by Google Gemini, PrepVerse offer
 
 ## 🌐 Live Demo
 
-**Try PrepVerse here:** https://prep-verse-green.vercel.app/
+**Try PrepVerse here:** [https://prep-verse-green.vercel.app/](https://ai-prep-verse-1jgo6ilpe-vanshikamittal0301-8155s-projects.vercel.app)
 
 ---
 
