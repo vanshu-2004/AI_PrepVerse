@@ -1,0 +1,302 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useEffect, useState } from 'react';
+import { 
+  Building2, 
+  ChevronRight, 
+  ArrowLeft, 
+  CheckCircle, 
+  Clock, 
+  ExternalLink, 
+  FileText, 
+  Video, 
+  HelpCircle,
+  Award,
+  ShieldCheck,
+  Bookmark
+} from 'lucide-react';
+import { companyPreps } from '../data/companyData';
+import { CompanyPrepInfo } from '../data/companyData';
+import { CompanyPrepSkeleton } from "./SkeletonLoaders";
+
+export default function CompanyPrep() {
+  const [loading, setLoading] = useState(true);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyPrepInfo | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredCompanies = companyPreps.filter((company) =>
+  company.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <CompanyPrepSkeleton />;
+
+  return (
+    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto h-[calc(100vh-100px)] overflow-y-auto">
+      
+      {!selectedCompany ? (
+        // ==========================================
+        // GRID VIEW OF COMPANIES
+        // ==========================================
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Company Placement Guides</h2>
+            <p className="text-xs text-zinc-500">Deep dives into recruitment pipelines, online assessment criteria, and specific interview loops.</p>
+          </div>
+          <div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by company name..."
+              className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:border-cyan-500 focus:outline-none"
+             />
+           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCompanies.map((company) => (
+              <div
+                key={company.id}
+                className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 hover:border-zinc-800 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-teal-600/5 rounded-full blur-2xl group-hover:scale-125 transition-all" />
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src={company.logo} 
+                      alt={company.name} 
+                      className="w-12 h-12 rounded-2xl border border-zinc-800 object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div>
+                      <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">{company.name}</h3>
+                      <p className="text-xs text-zinc-500">Product Engineering</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs text-zinc-400 font-medium">OA Pattern: <span className="font-bold text-zinc-300">{company.oaPattern.duration}</span></p>
+                    <p className="text-xs text-zinc-450 leading-relaxed truncate">{company.eligibility[0]}</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-zinc-900 flex items-center justify-between">
+                  <span className="text-[10px] bg-zinc-950 text-zinc-400 border border-zinc-900 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    {company.rounds.length} Interview Rounds
+                  </span>
+                  
+                  <button 
+                    onClick={() => setSelectedCompany(company)}
+                    className="flex items-center gap-1 bg-zinc-950 hover:bg-cyan-600 text-xs font-bold text-zinc-200 hover:text-white px-3.5 py-2 rounded-xl border border-zinc-900 hover:border-cyan-500 transition-all cursor-pointer"
+                  >
+                    View Guide
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {filteredCompanies.length === 0 && (
+              <div className="col-span-full rounded-2xl border border-zinc-800 bg-zinc-900/40 p-10 text-center">
+              <Building2 className="mx-auto mb-3 h-10 w-10 text-zinc-500" />
+                <h3 className="text-lg font-semibold text-white">
+                  No matching companies found
+                </h3>
+                <p className="mt-2 text-sm text-zinc-500">
+                  Try searching with a different company name.
+                </p>
+              </div>
+             )}
+          </div>
+        </div>
+      ) : (
+        // ==========================================
+        // DETAILED COMPANY GUIDE VIEW
+        // ==========================================
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-zinc-900 pb-4">
+            <button 
+              onClick={() => setSelectedCompany(null)}
+              className="flex items-center gap-2 text-zinc-400 hover:text-white text-xs font-bold bg-zinc-900 px-3.5 py-2 rounded-xl border border-zinc-800 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              All Guides
+            </button>
+            <span className="text-xs bg-teal-950/40 text-teal-400 font-extrabold px-3 py-1 rounded-full border border-teal-900/30">
+              Verified Pipeline 2026
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Left 8 Cols: Rounds, Pipeline */}
+            <div className="lg:col-span-8 space-y-6">
+              
+              {/* Company Intro Header */}
+              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 flex flex-col sm:flex-row items-center gap-6">
+                <img 
+                  src={selectedCompany.logo} 
+                  alt={selectedCompany.name} 
+                  className="w-16 h-16 rounded-2xl border border-zinc-800 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="text-center sm:text-left space-y-1">
+                  <h3 className="text-2xl font-black text-white tracking-tight">{selectedCompany.name} SDE Placement Guide</h3>
+                  <p className="text-xs text-zinc-400">Curated from verified candidate interview loop logs and recruitment timelines.</p>
+                </div>
+              </div>
+
+              {/* Recruitment Pipeline Process */}
+              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 space-y-4">
+                <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="w-4.5 h-4.5 text-cyan-400" />
+                  Hiring Pipeline Overview
+                </h3>
+                
+                <div className="relative border-l border-zinc-800 ml-4 pl-6 space-y-6 pt-2">
+                  {selectedCompany.hiringProcess.map((step, idx) => (
+                    <div key={idx} className="relative">
+                      <div className="absolute -left-10 top-0.5 bg-cyan-600/15 border border-cyan-500/30 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-cyan-400">
+                        {idx + 1}
+                      </div>
+                      <p className="text-sm text-zinc-200 font-semibold">{step.split('(')[0].trim()}</p>
+                      {step.includes('(') && (
+                        <p className="text-xs text-zinc-500 mt-0.5 italic">{step.substring(step.indexOf('(') + 1, step.indexOf(')'))}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interview Rounds In-Depth */}
+              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 space-y-4">
+                <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+                  <Award className="w-4.5 h-4.5 text-teal-400" />
+                  Technical & Googlyness Round Focus
+                </h3>
+
+                <div className="space-y-4">
+                  {selectedCompany.rounds.map((round, idx) => (
+                    <div key={idx} className="p-4 bg-zinc-950/60 rounded-2xl border border-zinc-900 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="text-sm font-bold text-white">{round.name}</h4>
+                          <p className="text-xs text-zinc-500 font-medium mt-0.5">Focus: {round.focus}</p>
+                        </div>
+                        <span className="text-[10px] bg-teal-950 text-teal-400 font-bold px-2 py-0.5 rounded border border-teal-900/30">
+                          {round.duration}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-widest">Preparation Tips</p>
+                        <ul className="list-disc pl-5 text-xs text-zinc-400 space-y-1">
+                          {round.tips.map((tip, tIdx) => (
+                            <li key={tIdx} className="leading-relaxed">{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right 4 Cols: Eligibility, OA format, resources */}
+            <div className="lg:col-span-4 space-y-6">
+              
+              {/* Eligibility Box */}
+              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 space-y-4">
+                <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wider">Academic Eligibility</h3>
+                <ul className="space-y-2.5">
+                  {selectedCompany.eligibility.map((el, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-400 leading-normal">
+                      <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>{el}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* OA Pattern details */}
+              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 space-y-3">
+                <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wider">Online Assessment (OA)</h3>
+                <div className="p-3.5 bg-zinc-950 rounded-xl border border-zinc-900 space-y-1.5 text-xs">
+                  <div className="flex justify-between font-bold">
+                    <span className="text-zinc-400">Duration Limit:</span>
+                    <span className="text-white flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-zinc-500" />
+                      {selectedCompany.oaPattern.duration}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  {selectedCompany.oaPattern.sections.map((sect, idx) => (
+                    <div key={idx} className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-900 space-y-1 text-xs">
+                      <div className="flex justify-between font-bold">
+                        <span className="text-teal-400">{sect.name}</span>
+                        <span className="text-zinc-500">{sect.questions}</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-550 leading-relaxed">{sect.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prep Resources links */}
+              <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 space-y-3">
+                <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wider">Official Resources</h3>
+                <div className="grid gap-2">
+                  {selectedCompany.resources.map((res, idx) => (
+                    <a 
+                      key={idx}
+                      href={res.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 bg-zinc-950 hover:bg-zinc-900 rounded-xl border border-zinc-900 text-xs text-zinc-300 font-semibold transition-colors group"
+                    >
+                      <div className="flex items-center gap-2">
+                        {res.type === 'Video' ? <Video className="w-4 h-4 text-pink-500" /> : <FileText className="w-4 h-4 text-cyan-400" />}
+                        <span>{res.title}</span>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-zinc-650 group-hover:text-white transition-colors" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* FAQS for Company */}
+          <div className="p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/40 space-y-4">
+            <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+              <HelpCircle className="w-4.5 h-4.5 text-orange-400" />
+              Frequently Asked Questions (FAQs)
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {selectedCompany.faqs.map((faq, idx) => (
+                <div key={idx} className="p-4 bg-zinc-950 rounded-2xl border border-zinc-900 space-y-2 text-xs leading-normal">
+                  <p className="font-bold text-white">Q: {faq.q}</p>
+                  <p className="text-zinc-400 leading-relaxed">A: {faq.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  );
+}

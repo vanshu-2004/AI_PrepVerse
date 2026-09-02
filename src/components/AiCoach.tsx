@@ -1,0 +1,232 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.5
+ */
+
+import React, { useState, useRef, useEffect} from 'react';
+import { 
+  Sparkles, 
+  Send, 
+  Brain, 
+  HelpCircle, 
+  Code, 
+  Compass, 
+  User, 
+  ArrowRight,
+  RefreshCw,
+  AlertCircle
+} from 'lucide-react';
+
+import { AICoachSkeleton } from "./SkeletonLoaders";
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const STORAGE_KEY = 'prepverse_ai_coach_history';
+
+export default function AiCoach() {
+  const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return [{ role: 'assistant', content: 'Hello! I am your PrepVerse SDE Placement Coach. I can help you build custom placement roadmaps, review your projects, drill system design diagrams, or walk through tough algorithms. What is on your mind today?' }];
+      }
+    }
+    return [{ role: 'assistant', content: 'Hello! I am your PrepVerse SDE Placement Coach. I can help you build custom placement roadmaps, review your projects, drill system design diagrams, or walk through tough algorithms. What is on your mind today?' }];
+  });
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  useEffect(() => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <AICoachSkeleton />;
+
+  const handleSendMessage = async (customText?: string) => {
+    const textToSend = customText || inputText;
+    if (!textToSend.trim()) return;
+
+    if (!customText) {
+      setInputText('');
+    }
+    setErrorMessage('');
+
+    const updatedMessages = [...messages, { role: 'user', content: textToSend } as Message];
+    setMessages(updatedMessages);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/gemini/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: textToSend
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+      } else {
+        setErrorMessage(data.error || 'Failed to analyze request. Check console logs.');
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMessage('Failed to connect with our Gemini AI Coach backend proxy.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearHistory = () => {
+  const welcomeMessage: Message = {
+    role: 'assistant',
+    content: 'Hello! I am your PrepVerse SDE Placement Coach. I can help you build custom placement roadmaps, review your projects, drill system design diagrams, or walk through tough algorithms. What is on your mind today?'
+  };
+  setMessages([welcomeMessage]);
+  localStorage.removeItem(STORAGE_KEY);
+  };
+  const prompts = [
+    { label: 'Generate placement roadmap', text: 'Generate a step-by-step 3-month preparation roadmap for an SDE placement at Google. Break it down into weekly milestones spanning DSA, System Design, and CS Fundamentals.' },
+    { label: 'Drill System Design concepts', text: 'Explain how an LRU Cache is implemented. Include details on the double-linked-list & hash-map layout, and time/space complexities.' },
+    { label: 'Behavioral STAR simulation', text: 'Ask me a difficult Amazon Leadership Principle behavioral question (like "Tell me about a time you took a risk") and evaluate my response based on the STAR framework.' }
+  ];
+
+  return (
+    <div className="p-6 md:p-8 space-y-6 max-w-5xl mx-auto h-[calc(100vh-100px)] flex flex-col justify-between">
+      
+      {/* Title */}
+      <div className="shrink-0 flex items-center justify-between">
+      <div>
+      <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+        <Sparkles className="w-5 h-5 text-teal-400 animate-pulse" />
+        PrepVerse Placement AI Coach
+      </h2>
+      <p className="text-xs text-zinc-500">Ask career questions, design architectures, or outline mock algorithms with server-side Gemini intelligence.</p>
+    </div>
+    <button
+    onClick={clearHistory}
+    className="text-xs font-semibold text-zinc-400 hover:text-pink-400 border border-zinc-800 hover:border-pink-900/40 rounded-xl px-3 py-2 transition-colors shrink-0"
+  >
+    Clear History
+  </button>
+</div>
+
+      {/* Chat Messages Panel */}
+      <div className="flex-1 min-h-[300px] border border-zinc-900 bg-zinc-950 rounded-2xl p-6 overflow-y-auto space-y-6">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            
+            {msg.role === 'assistant' && (
+              <div className="p-2.5 bg-teal-500/10 text-teal-400 rounded-2xl h-fit border border-teal-500/20">
+                <Brain className="w-5 h-5" />
+              </div>
+            )}
+
+            <div className={`p-4 rounded-2xl max-w-[75%] text-sm leading-relaxed whitespace-pre-wrap font-sans ${
+              msg.role === 'user'
+                ? 'bg-teal-600 text-white rounded-tr-none'
+                : 'bg-zinc-900/40 text-zinc-200 border border-zinc-900 rounded-tl-none'
+            }`}>
+              {msg.content}
+            </div>
+
+            {msg.role === 'user' && (
+              <div className="p-2.5 bg-zinc-900 text-zinc-400 rounded-2xl h-fit border border-zinc-800">
+                <User className="w-5 h-5" />
+              </div>
+            )}
+
+          </div>
+        ))}
+
+        {isLoading && (
+          <div className="flex gap-4 justify-start">
+            <div className="p-2.5 bg-teal-500/10 text-teal-400 rounded-2xl h-fit border border-teal-500/20 animate-pulse">
+              <Brain className="w-5 h-5" />
+            </div>
+            <div className="p-4 bg-zinc-900/40 text-zinc-450 border border-zinc-900 rounded-2xl rounded-tl-none flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              <span>Coach is constructing a response...</span>
+            </div>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="p-4 bg-pink-950/40 border border-pink-900/30 text-pink-400 text-xs rounded-2xl flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Suggested Templates Prompts (Curated SDE template keys) */}
+      {messages.length === 1 && (
+        <div className="space-y-2 shrink-0 pt-2">
+          <p className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest px-1">Curated Prompts Templates</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {prompts.map((p, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendMessage(p.text)}
+                className="flex items-center justify-between p-3.5 bg-zinc-900 hover:bg-zinc-850 rounded-2xl border border-zinc-800 text-left text-xs text-zinc-300 font-semibold transition-all group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Compass className="w-4 h-4 text-teal-400 shrink-0" />
+                  <span className="line-clamp-1">{p.label}</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-650 group-hover:text-white transition-colors shrink-0" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Message Input Box */}
+      <div className="flex gap-3 bg-zinc-950 p-2.5 rounded-2xl border border-zinc-900 shrink-0 mt-4">
+        <input
+          type="text"
+          placeholder="Ask your coach anything about DSA, resumes, or interview questions..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSendMessage();
+            }
+          }}
+          className="flex-1 bg-transparent px-3 py-2 text-sm text-zinc-100 focus:outline-none placeholder:text-zinc-600"
+        />
+        <button
+          onClick={() => handleSendMessage()}
+          disabled={isLoading || !inputText.trim()}
+          className="p-3.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white rounded-xl transition-all cursor-pointer"
+        >
+          <Send className="w-4.5 h-4.5" />
+        </button>
+      </div>
+
+    </div>
+  );
+}
